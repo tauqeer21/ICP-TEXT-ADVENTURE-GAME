@@ -49,7 +49,7 @@ npm or yarn package manager
 ### Installation
 
 # Clone the repository
-git clone https://github.com/tauqeer21/WCHL-Decentralized-Zork.git
+git clone https://github.com/tauqeer21/ICP-TEXT-ADVENTURE-GAME.git
 
 # Install the DFX
 DFX SDK 0.29.0+ (Internet Computer development environment) coammand for Install DFX= sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
