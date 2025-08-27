@@ -49,8 +49,7 @@ npm or yarn package manager
 ### Installation
 
 # Clone the repository
-git clone https://github.com/yourusername/uss-phoenix-adventure.git
-cd uss-phoenix-adventure
+git clone https://github.com/tauqeer21/WCHL-Decentralized-Zork.git
 
 # Install the DFX
 DFX SDK 0.29.0+ (Internet Computer development environment) coammand for Install DFX= sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
