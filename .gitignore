@@ -1,0 +1,10 @@
+node_modules/
+.dfx/
+dist/
+.vite/
+.env
+.DS_Store
+*.log
+.cache/
+coverage/
+build/

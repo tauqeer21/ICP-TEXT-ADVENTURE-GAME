@@ -1,0 +1,26 @@
+{
+  "name": "icp-text-adventure",
+  "version": "1.0.0",
+  "description": "Cyberpunk Text Adventure Game on Internet Computer",
+  "scripts": {
+    "build": "dfx build",
+    "start": "dfx start --background",
+    "deploy": "dfx deploy",
+    "stop": "dfx stop"
+  },
+  "keywords": [
+    "icp",
+    "blockchain",
+    "game",
+    "nft",
+    "text-adventure"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@react-three/drei": "^10.7.4",
+    "@react-three/fiber": "^9.3.0",
+    "react-tsparticles": "^2.12.2",
+    "three": "^0.179.1"
+  }
+}
