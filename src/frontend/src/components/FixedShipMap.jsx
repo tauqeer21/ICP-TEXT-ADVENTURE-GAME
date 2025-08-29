@@ -1,88 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, rooms, onCommand }) {
+function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction, rooms, unlockedRooms, onCommand }) {
   const [hoveredRoom, setHoveredRoom] = useState(null);
-  const [playerAnimation, setPlayerAnimation] = useState(false);
 
-  // Complete 16-room ship layout with proper positioning
+  // FIXED: Ship layout that matches EXACT room positions and connections
   const shipLayout = {
-    // TOP LEVEL - Bridge Deck
-    communications: { x: 1, y: 0, name: 'Comms', emoji: '📡' },
-    bridge: { x: 2, y: 0, name: 'Bridge', emoji: '🚀' },
-    navigation: { x: 3, y: 0, name: 'Navigation', emoji: '🧭' },
+    // Row 0 (Top row)
+    communications: { x: 0, y: 0, name: 'Comms', emoji: '📡' },
+    bridge: { x: 1, y: 0, name: 'Bridge', emoji: '🚀' },
+    navigation: { x: 2, y: 0, name: 'Navigation', emoji: '🧭' },
     
-    // SECOND LEVEL - Command Deck
-    command_center: { x: 2, y: 1, name: 'Command', emoji: '🖥️' },
+    // Row 1 
+    engineering: { x: 0, y: 1, name: 'Engineering', emoji: '⚙️' },
+    command_center: { x: 1, y: 1, name: 'Command', emoji: '🖥️' },
+    laboratory: { x: 2, y: 1, name: 'Laboratory', emoji: '🧪' },
     
-    // THIRD LEVEL - Main Deck
-    engineering: { x: 0, y: 2, name: 'Engineering', emoji: '⚙️' },
-    main_corridor: { x: 1, y: 2, name: 'Corridor', emoji: '⚡' },
-    security: { x: 2, y: 2, name: 'Security', emoji: '🔒' },
-    life_support: { x: 3, y: 2, name: 'Life Support', emoji: '🌬️' },
+    // Row 2
+    power_core: { x: 0, y: 2, name: 'Power Core', emoji: '⚛️' },
+    main_corridor: { x: 1, y: 2, name: 'Main Corridor', emoji: '⚡' },
+    fabrication: { x: 2, y: 2, name: 'Fabrication', emoji: '🔧' },
     
-    // FOURTH LEVEL - Lower Deck
-    power_core: { x: 0, y: 3, name: 'Power Core', emoji: '⚛️' },
-    medical_bay: { x: 1, y: 3, name: 'Medical', emoji: '🏥' },
-    armory: { x: 2, y: 3, name: 'Armory', emoji: '⚔️' },
-    laboratory: { x: 3, y: 3, name: 'Laboratory', emoji: '🧪' },
+    // Row 3
+    armory: { x: 0, y: 3, name: 'Armory', emoji: '⚔️' },
+    life_support: { x: 1, y: 3, name: 'Life Support', emoji: '🌬️' },
+    cargo_bay: { x: 2, y: 3, name: 'Cargo Bay', emoji: '📦' },
     
-    // FIFTH LEVEL - Storage/Utilities
-    cargo_bay: { x: 1, y: 4, name: 'Cargo Bay', emoji: '📦' },
-    fabrication: { x: 2, y: 4, name: 'Fabrication', emoji: '🔧' },
+    // Row 4 (Bottom row)
+    detention: { x: 0, y: 4, name: 'Detention', emoji: '🚔' },
+    medical_bay: { x: 1, y: 4, name: 'Medical', emoji: '🏥' },
+    ai_core: { x: 2, y: 4, name: 'AI Core', emoji: '🤖' },
     
-    // BOTTOM LEVEL - Critical Systems
-    detention: { x: 1, y: 5, name: 'Detention', emoji: '🚔' },
-    ai_core: { x: 2, y: 5, name: 'AI Core', emoji: '🤖' }
+    // Additional room for complete layout
+    security: { x: 3, y: 2, name: 'Security', emoji: '🔒' }
   };
 
-  // Connection lines between rooms
+  // FIXED: Connections that match your actual room exits
   const connections = [
-    // Bridge level connections
+    // Top row horizontal connections
     { from: 'communications', to: 'bridge' },
     { from: 'bridge', to: 'navigation' },
     
-    // Vertical connections
+    // Vertical connections down the middle
     { from: 'bridge', to: 'command_center' },
     { from: 'command_center', to: 'main_corridor' },
+    { from: 'main_corridor', to: 'life_support' },
+    { from: 'life_support', to: 'medical_bay' },
     
-    // Main deck horizontal connections
-    { from: 'engineering', to: 'main_corridor' },
-    { from: 'main_corridor', to: 'security' },
-    { from: 'security', to: 'life_support' },
-    
-    // Lower deck connections
+    // Left column vertical connections
     { from: 'engineering', to: 'power_core' },
-    { from: 'main_corridor', to: 'medical_bay' },
-    { from: 'security', to: 'armory' },
-    { from: 'life_support', to: 'laboratory' },
     
-    // Storage level
-    { from: 'medical_bay', to: 'cargo_bay' },
-    { from: 'armory', to: 'fabrication' },
+    // Right column vertical connections
+    { from: 'navigation', to: 'laboratory' },
     { from: 'laboratory', to: 'fabrication' },
+    { from: 'fabrication', to: 'cargo_bay' },
     
-    // Bottom level
-    { from: 'cargo_bay', to: 'detention' },
-    { from: 'fabrication', to: 'ai_core' },
-    { from: 'detention', to: 'ai_core' }
+    // Horizontal connections between columns
+    { from: 'main_corridor', to: 'engineering' },
+    { from: 'main_corridor', to: 'security' },
+    { from: 'life_support', to: 'armory' },
+    { from: 'cargo_bay', to: 'ai_core' },
+    { from: 'detention', to: 'medical_bay' },
+    { from: 'detention', to: 'ai_core' },
   ];
-
-  // Animate player movement
-  useEffect(() => {
-    if (lastAction?.type === 'move') {
-      setPlayerAnimation(true);
-      const timer = setTimeout(() => setPlayerAnimation(false), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [lastAction]);
 
   const isVisited = (roomId) => visitedRooms.includes(roomId);
   const isCurrent = (roomId) => currentLocation === roomId;
   const isLocked = (roomId) => {
     const room = rooms[roomId];
     if (!room?.locked) return false;
-    const requirements = room.unlockRequires || [];
-    return !requirements.every(req => gameState.inventory?.includes(req));
+    return !unlockedRooms.includes(roomId);
   };
 
   const getRoomColor = (roomId) => {
@@ -92,6 +78,7 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
     return '#666666';
   };
 
+  // FIXED: Proper click handling that uses actual room exits
   const handleRoomClick = (roomId) => {
     if (roomId === currentLocation) {
       onCommand('look');
@@ -99,68 +86,58 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
     }
     
     if (isLocked(roomId)) {
-      return; // Can't move to locked rooms
+      return;
     }
 
-    // Simple pathfinding - find direction
-    const currentRoom = shipLayout[currentLocation];
-    const targetRoom = shipLayout[roomId];
-    
-    if (!currentRoom || !targetRoom) return;
-    
-    const dx = targetRoom.x - currentRoom.x;
-    const dy = targetRoom.y - currentRoom.y;
-    
-    let direction;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      direction = dx > 0 ? 'east' : 'west';
-    } else {
-      direction = dy > 0 ? 'south' : 'north';
+    // Find the correct direction based on actual room exits
+    const currentRoom = rooms[currentLocation];
+    if (currentRoom && currentRoom.exits) {
+      for (const [direction, targetRoomId] of Object.entries(currentRoom.exits)) {
+        if (targetRoomId === roomId) {
+          onCommand(`go ${direction}`);
+          return;
+        }
+      }
     }
     
-    // Check if this direction is valid from current room
-    const roomData = rooms[currentLocation];
-    if (roomData?.exits?.[direction]) {
-      onCommand(`go ${direction}`);
-    }
+    // If no direct connection found
+    onCommand(`look`);
   };
 
   return (
-    <div className="fixed-ship-map" style={{
+    <div style={{
       width: '600px',
-      height: '500px',
+      height: '420px',
       backgroundColor: '#0a0a0a',
       border: '3px solid #ff6666',
       borderRadius: '12px',
-      padding: '20px',
-      position: 'relative',
-      userSelect: 'none'
+      padding: '16px',
+      position: 'relative'
     }}>
       {/* Title */}
       <div style={{
         textAlign: 'center',
-        marginBottom: '15px',
+        marginBottom: '12px',
         color: '#ff6666',
-        fontSize: '16px',
+        fontSize: '14px',
         fontWeight: 'bold',
         textShadow: '0 0 10px #ff6666'
       }}>
-        🚨 USS PHOENIX - ALL DECKS 🚨
+        🚨 USS PHOENIX - SHIP LAYOUT 🚨
       </div>
 
       {/* SVG Ship Layout */}
-      <svg width="560" height="420" style={{ 
+      <svg width="568" height="360" style={{ 
         border: '2px solid #ff6666', 
         borderRadius: '8px', 
         backgroundColor: '#001111'
       }}>
-        {/* Grid Background */}
         <defs>
-          <pattern id="shipGrid" width="140" height="70" patternUnits="userSpaceOnUse">
-            <path d="M 140 0 L 0 0 0 70" fill="none" stroke="#333333" strokeWidth="1" opacity="0.2"/>
+          <pattern id="shipGrid" width="142" height="72" patternUnits="userSpaceOnUse">
+            <path d="M 142 0 L 0 0 0 72" fill="none" stroke="#333333" strokeWidth="1" opacity="0.2"/>
           </pattern>
         </defs>
-        <rect width="560" height="420" fill="url(#shipGrid)"/>
+        <rect width="568" height="360" fill="url(#shipGrid)"/>
         
         {/* Connection Lines */}
         {connections.map((conn, index) => {
@@ -171,13 +148,13 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
           return (
             <line
               key={index}
-              x1={fromRoom.x * 140 + 70}
-              y1={fromRoom.y * 70 + 35}
-              x2={toRoom.x * 140 + 70}
-              y2={toRoom.y * 70 + 35}
-              stroke="#444444"
-              strokeWidth="3"
-              strokeDasharray="8,4"
+              x1={fromRoom.x * 142 + 71}
+              y1={fromRoom.y * 72 + 36}
+              x2={toRoom.x * 142 + 71}
+              y2={toRoom.y * 72 + 36}
+              stroke="#0088ff"
+              strokeWidth="2"
+              strokeDasharray="6,3"
             />
           );
         })}
@@ -191,10 +168,10 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
             <g key={roomId}>
               {/* Room Background */}
               <rect
-                x={room.x * 140 + 20}
-                y={room.y * 70 + 10}
-                width="100"
-                height="50"
+                x={room.x * 142 + 15}
+                y={room.y * 72 + 6}
+                width="112"
+                height="60"
                 rx="8"
                 fill={isCurrent(roomId) ? '#003366' : isVisited(roomId) ? '#002211' : '#001122'}
                 stroke={getRoomColor(roomId)}
@@ -207,8 +184,8 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
               
               {/* Room Emoji */}
               <text
-                x={room.x * 140 + 70}
-                y={room.y * 70 + 30}
+                x={room.x * 142 + 71}
+                y={room.y * 72 + 30}
                 textAnchor="middle"
                 fontSize="20"
                 style={{ cursor: 'pointer' }}
@@ -219,8 +196,8 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
               
               {/* Room Name */}
               <text
-                x={room.x * 140 + 70}
-                y={room.y * 70 + 48}
+                x={room.x * 142 + 71}
+                y={room.y * 72 + 50}
                 textAnchor="middle"
                 fill={getRoomColor(roomId)}
                 fontSize="10"
@@ -234,8 +211,8 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
               {/* Lock Indicator */}
               {isLocked(roomId) && (
                 <text
-                  x={room.x * 140 + 100}
-                  y={room.y * 70 + 20}
+                  x={room.x * 142 + 110}
+                  y={room.y * 72 + 20}
                   fontSize="12"
                   fill="#ff3333"
                 >
@@ -247,19 +224,15 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
               {isCurrent(roomId) && (
                 <g>
                   <circle
-                    cx={room.x * 140 + 40}
-                    cy={room.y * 70 + 25}
+                    cx={room.x * 142 + 35}
+                    cy={room.y * 72 + 25}
                     r="8"
                     fill="#00ffff"
-                    opacity="0.6"
-                  >
-                    {playerAnimation && (
-                      <animate attributeName="r" values="8;15;8" dur="1s" />
-                    )}
-                  </circle>
+                    opacity="0.8"
+                  />
                   <text
-                    x={room.x * 140 + 40}
-                    y={room.y * 70 + 30}
+                    x={room.x * 142 + 35}
+                    y={room.y * 72 + 30}
                     textAnchor="middle"
                     fontSize="12"
                     fill="#ffffff"
@@ -272,87 +245,59 @@ function FixedShipMap({ currentLocation, visitedRooms, gameState, lastAction, ro
               {/* Hover Effect */}
               {hoveredRoom === roomId && (
                 <rect
-                  x={room.x * 140 + 20}
-                  y={room.y * 70 + 10}
-                  width="100"
-                  height="50"
+                  x={room.x * 142 + 15}
+                  y={room.y * 72 + 6}
+                  width="112"
+                  height="60"
                   rx="8"
                   fill="none"
                   stroke="#00ffff"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   opacity="0.7"
                 />
               )}
             </g>
           );
         })}
-        
-        {/* Ship Hull Outline */}
-        <rect 
-          x="10" 
-          y="10" 
-          width="540" 
-          height="400" 
-          fill="none" 
-          stroke="#ff6666" 
-          strokeWidth="3" 
-          rx="20" 
-          strokeDasharray="15,10"
-        />
-        
-        {/* Deck Labels */}
-        <g>
-          <text x="10" y="25" fill="#ffaa33" fontSize="10" fontWeight="bold">BRIDGE DECK</text>
-          <text x="10" y="95" fill="#ffaa33" fontSize="10" fontWeight="bold">COMMAND DECK</text>
-          <text x="10" y="165" fill="#ffaa33" fontSize="10" fontWeight="bold">MAIN DECK</text>
-          <text x="10" y="235" fill="#ffaa33" fontSize="10" fontWeight="bold">LOWER DECK</text>
-          <text x="10" y="305" fill="#ffaa33" fontSize="10" fontWeight="bold">STORAGE DECK</text>
-          <text x="10" y="375" fill="#ffaa33" fontSize="10" fontWeight="bold">CRITICAL SYSTEMS</text>
-        </g>
       </svg>
 
       {/* Room Info Panel */}
       {hoveredRoom && (
         <div style={{
           position: 'absolute',
-          bottom: '10px',
-          left: '20px',
-          right: '20px',
+          bottom: '8px',
+          left: '16px',
+          right: '16px',
+          height: '40px',
           backgroundColor: '#001122',
           border: '2px solid #00ffff',
           borderRadius: '6px',
-          padding: '8px',
-          fontSize: '12px'
+          padding: '6px',
+          fontSize: '11px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
-            {rooms[hoveredRoom]?.name || hoveredRoom}
+          <div>
+            <div style={{ color: '#00ffff', fontWeight: 'bold', fontSize: '12px' }}>
+              {rooms[hoveredRoom]?.name || hoveredRoom}
+            </div>
+            <div style={{ color: '#cccccc', fontSize: '10px' }}>
+              {isLocked(hoveredRoom) ? '🔒 LOCKED' : 
+               isCurrent(hoveredRoom) ? '📍 CURRENT LOCATION' :
+               isVisited(hoveredRoom) ? '✅ VISITED' : '❔ UNEXPLORED'}
+            </div>
           </div>
-          <div style={{ color: '#cccccc', fontSize: '11px' }}>
-            {isLocked(hoveredRoom) ? '🔒 LOCKED' : 
-             isCurrent(hoveredRoom) ? '📍 CURRENT LOCATION' :
-             isVisited(hoveredRoom) ? '✅ VISITED' : '❔ UNEXPLORED'}
+          
+          <div style={{ fontSize: '9px', textAlign: 'right' }}>
+            <div style={{ color: '#00ffff' }}>👤 Current</div>
+            <div style={{ color: '#ffaa33' }}>✅ Visited</div>
+            <div style={{ color: '#ff3333' }}>🔒 Locked</div>
           </div>
         </div>
       )}
-
-      {/* Legend */}
-      <div style={{
-        position: 'absolute',
-        top: '50px',
-        right: '20px',
-        backgroundColor: '#000811',
-        border: '1px solid #333333',
-        borderRadius: '4px',
-        padding: '8px',
-        fontSize: '10px'
-      }}>
-        <div style={{ color: '#00ffff' }}>👤 Current Location</div>
-        <div style={{ color: '#ffaa33' }}>✅ Visited</div>
-        <div style={{ color: '#ff3333' }}>🔒 Locked</div>
-        <div style={{ color: '#666666' }}>❔ Unexplored</div>
-      </div>
     </div>
   );
 }
 
-export default FixedShipMap;
+export default CompleteShipMap;

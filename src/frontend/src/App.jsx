@@ -151,53 +151,72 @@ function StableTerminal({ onCommand, isLoading, lastResponse }) {
           </div>
         )}
       </div>
-
-      {/* No command input here - handled by SmartCommandInput below */}
     </div>
   );
 }
 
-// COMPLETE SHIP MAP COMPONENT - FIXED SIZE
+// COMPLETE SHIP MAP COMPONENT - FIXED WITH CORRECT NAVIGATION
 function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction, rooms, unlockedRooms, onCommand }) {
   const [hoveredRoom, setHoveredRoom] = useState(null);
 
+  // FIXED: Ship layout that matches EXACT room positions and connections
   const shipLayout = {
-    communications: { x: 1, y: 0, name: 'Comms', emoji: '📡' },
-    bridge: { x: 2, y: 0, name: 'Bridge', emoji: '🚀' },
-    navigation: { x: 3, y: 0, name: 'Navigation', emoji: '🧭' },
-    command_center: { x: 2, y: 1, name: 'Command', emoji: '🖥️' },
-    engineering: { x: 0, y: 2, name: 'Engineering', emoji: '⚙️' },
-    main_corridor: { x: 1, y: 2, name: 'Corridor', emoji: '⚡' },
-    security: { x: 2, y: 2, name: 'Security', emoji: '🔒' },
-    life_support: { x: 3, y: 2, name: 'Life Support', emoji: '🌬️' },
-    power_core: { x: 0, y: 3, name: 'Power Core', emoji: '⚛️' },
-    medical_bay: { x: 1, y: 3, name: 'Medical', emoji: '🏥' },
-    armory: { x: 2, y: 3, name: 'Armory', emoji: '⚔️' },
-    laboratory: { x: 3, y: 3, name: 'Laboratory', emoji: '🧪' },
-    cargo_bay: { x: 1, y: 4, name: 'Cargo Bay', emoji: '📦' },
-    fabrication: { x: 2, y: 4, name: 'Fabrication', emoji: '🔧' },
-    detention: { x: 1, y: 5, name: 'Detention', emoji: '🚔' },
-    ai_core: { x: 2, y: 5, name: 'AI Core', emoji: '🤖' }
+    // Row 0 (Top row)
+    communications: { x: 0, y: 0, name: 'Comms', emoji: '📡' },
+    bridge: { x: 1, y: 0, name: 'Bridge', emoji: '🚀' },
+    navigation: { x: 2, y: 0, name: 'Navigation', emoji: '🧭' },
+    
+    // Row 1 
+    engineering: { x: 0, y: 1, name: 'Engineering', emoji: '⚙️' },
+    command_center: { x: 1, y: 1, name: 'Command', emoji: '🖥️' },
+    laboratory: { x: 2, y: 1, name: 'Laboratory', emoji: '🧪' },
+    
+    // Row 2
+    power_core: { x: 0, y: 2, name: 'Power Core', emoji: '⚛️' },
+    main_corridor: { x: 1, y: 2, name: 'Main Corridor', emoji: '⚡' },
+    fabrication: { x: 2, y: 2, name: 'Fabrication', emoji: '🔧' },
+    
+    // Row 3
+    armory: { x: 0, y: 3, name: 'Armory', emoji: '⚔️' },
+    life_support: { x: 1, y: 3, name: 'Life Support', emoji: '🌬️' },
+    cargo_bay: { x: 2, y: 3, name: 'Cargo Bay', emoji: '📦' },
+    
+    // Row 4 (Bottom row)
+    detention: { x: 0, y: 4, name: 'Detention', emoji: '🚔' },
+    medical_bay: { x: 1, y: 4, name: 'Medical', emoji: '🏥' },
+    ai_core: { x: 2, y: 4, name: 'AI Core', emoji: '🤖' },
+    
+    // Additional room for complete layout
+    security: { x: 3, y: 2, name: 'Security', emoji: '🔒' }
   };
 
+  // FIXED: Connections that match your actual room exits
   const connections = [
+    // Top row horizontal connections
     { from: 'communications', to: 'bridge' },
     { from: 'bridge', to: 'navigation' },
+    
+    // Vertical connections down the middle
     { from: 'bridge', to: 'command_center' },
     { from: 'command_center', to: 'main_corridor' },
-    { from: 'engineering', to: 'main_corridor' },
-    { from: 'main_corridor', to: 'security' },
-    { from: 'security', to: 'life_support' },
+    { from: 'main_corridor', to: 'life_support' },
+    { from: 'life_support', to: 'medical_bay' },
+    
+    // Left column vertical connections
     { from: 'engineering', to: 'power_core' },
-    { from: 'main_corridor', to: 'medical_bay' },
-    { from: 'security', to: 'armory' },
-    { from: 'life_support', to: 'laboratory' },
-    { from: 'medical_bay', to: 'cargo_bay' },
-    { from: 'armory', to: 'fabrication' },
+    
+    // Right column vertical connections
+    { from: 'navigation', to: 'laboratory' },
     { from: 'laboratory', to: 'fabrication' },
-    { from: 'cargo_bay', to: 'detention' },
-    { from: 'fabrication', to: 'ai_core' },
-    { from: 'detention', to: 'ai_core' }
+    { from: 'fabrication', to: 'cargo_bay' },
+    
+    // Horizontal connections between columns
+    { from: 'main_corridor', to: 'engineering' },
+    { from: 'main_corridor', to: 'security' },
+    { from: 'life_support', to: 'armory' },
+    { from: 'cargo_bay', to: 'ai_core' },
+    { from: 'detention', to: 'medical_bay' },
+    { from: 'detention', to: 'ai_core' },
   ];
 
   const isVisited = (roomId) => visitedRooms.includes(roomId);
@@ -215,7 +234,7 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
     return '#666666';
   };
 
-  // FIXED: Proper direction mapping based on room exits
+  // FIXED: Proper click handling that uses actual room exits
   const handleRoomClick = (roomId) => {
     if (roomId === currentLocation) {
       onCommand('look');
@@ -226,10 +245,9 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
       return;
     }
 
-    // Get the current room's exits and find direct connection
+    // Find the correct direction based on actual room exits
     const currentRoom = rooms[currentLocation];
     if (currentRoom && currentRoom.exits) {
-      // Check if there's a direct connection
       for (const [direction, targetRoomId] of Object.entries(currentRoom.exits)) {
         if (targetRoomId === roomId) {
           onCommand(`go ${direction}`);
@@ -238,7 +256,7 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
       }
     }
     
-    // If no direct connection found, just show error
+    // If no direct connection found
     onCommand(`look`);
   };
 
@@ -261,21 +279,21 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
         fontWeight: 'bold',
         textShadow: '0 0 10px #ff6666'
       }}>
-        🚨 USS PHOENIX - ALL 16 COMPARTMENTS 🚨
+        🚨 USS PHOENIX - SHIP LAYOUT 🚨
       </div>
 
-      {/* SVG Ship Layout - FIXED SIZE */}
-      <svg width="568" height="330" style={{ 
+      {/* SVG Ship Layout */}
+      <svg width="568" height="360" style={{ 
         border: '2px solid #ff6666', 
         borderRadius: '8px', 
         backgroundColor: '#001111'
       }}>
         <defs>
-          <pattern id="shipGrid" width="142" height="55" patternUnits="userSpaceOnUse">
-            <path d="M 142 0 L 0 0 0 55" fill="none" stroke="#333333" strokeWidth="1" opacity="0.2"/>
+          <pattern id="shipGrid" width="142" height="72" patternUnits="userSpaceOnUse">
+            <path d="M 142 0 L 0 0 0 72" fill="none" stroke="#333333" strokeWidth="1" opacity="0.2"/>
           </pattern>
         </defs>
-        <rect width="568" height="330" fill="url(#shipGrid)"/>
+        <rect width="568" height="360" fill="url(#shipGrid)"/>
         
         {/* Connection Lines */}
         {connections.map((conn, index) => {
@@ -287,30 +305,30 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
             <line
               key={index}
               x1={fromRoom.x * 142 + 71}
-              y1={fromRoom.y * 55 + 27.5}
+              y1={fromRoom.y * 72 + 36}
               x2={toRoom.x * 142 + 71}
-              y2={toRoom.y * 55 + 27.5}
-              stroke="#444444"
+              y2={toRoom.y * 72 + 36}
+              stroke="#0088ff"
               strokeWidth="2"
               strokeDasharray="6,3"
             />
           );
         })}
         
-        {/* Room Nodes - ALL 16 ROOMS FIXED SIZE */}
+        {/* Room Nodes */}
         {Object.entries(shipLayout).map(([roomId, room]) => {
           const roomExists = rooms[roomId];
           if (!roomExists) return null;
           
           return (
             <g key={roomId}>
-              {/* Room Background - FIXED SIZE */}
+              {/* Room Background */}
               <rect
                 x={room.x * 142 + 15}
-                y={room.y * 55 + 5}
+                y={room.y * 72 + 6}
                 width="112"
-                height="45"
-                rx="6"
+                height="60"
+                rx="8"
                 fill={isCurrent(roomId) ? '#003366' : isVisited(roomId) ? '#002211' : '#001122'}
                 stroke={getRoomColor(roomId)}
                 strokeWidth={isCurrent(roomId) ? '3' : '2'}
@@ -323,9 +341,9 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
               {/* Room Emoji */}
               <text
                 x={room.x * 142 + 71}
-                y={room.y * 55 + 25}
+                y={room.y * 72 + 30}
                 textAnchor="middle"
-                fontSize="16"
+                fontSize="20"
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleRoomClick(roomId)}
               >
@@ -335,10 +353,10 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
               {/* Room Name */}
               <text
                 x={room.x * 142 + 71}
-                y={room.y * 55 + 40}
+                y={room.y * 72 + 50}
                 textAnchor="middle"
                 fill={getRoomColor(roomId)}
-                fontSize="9"
+                fontSize="10"
                 fontWeight={isCurrent(roomId) ? 'bold' : 'normal'}
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleRoomClick(roomId)}
@@ -350,8 +368,8 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
               {isLocked(roomId) && (
                 <text
                   x={room.x * 142 + 110}
-                  y={room.y * 55 + 15}
-                  fontSize="10"
+                  y={room.y * 72 + 20}
+                  fontSize="12"
                   fill="#ff3333"
                 >
                   🔒
@@ -363,16 +381,16 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
                 <g>
                   <circle
                     cx={room.x * 142 + 35}
-                    cy={room.y * 55 + 20}
-                    r="6"
+                    cy={room.y * 72 + 25}
+                    r="8"
                     fill="#00ffff"
-                    opacity="0.6"
+                    opacity="0.8"
                   />
                   <text
                     x={room.x * 142 + 35}
-                    y={room.y * 55 + 24}
+                    y={room.y * 72 + 30}
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="12"
                     fill="#ffffff"
                   >
                     👤
@@ -384,35 +402,22 @@ function CompleteShipMap({ currentLocation, visitedRooms, gameState, lastAction,
               {hoveredRoom === roomId && (
                 <rect
                   x={room.x * 142 + 15}
-                  y={room.y * 55 + 5}
+                  y={room.y * 72 + 6}
                   width="112"
-                  height="45"
-                  rx="6"
+                  height="60"
+                  rx="8"
                   fill="none"
                   stroke="#00ffff"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   opacity="0.7"
                 />
               )}
             </g>
           );
         })}
-        
-        {/* Ship Hull Outline */}
-        <rect 
-          x="8" 
-          y="8" 
-          width="552" 
-          height="314" 
-          fill="none" 
-          stroke="#ff6666" 
-          strokeWidth="2" 
-          rx="16" 
-          strokeDasharray="12,8"
-        />
       </svg>
 
-      {/* Fixed Room Info Panel */}
+      {/* Room Info Panel */}
       {hoveredRoom && (
         <div style={{
           position: 'absolute',
@@ -520,30 +525,9 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Complete room definitions - ALL 16 ROOMS
+  // CORRECTED ROOM DEFINITIONS - ALL 16 ROOMS WITH ACCURATE EXITS
   const rooms = {
-    command_center: {
-      name: 'Command Center 🖥️',
-      description: 'Emergency lighting casts an eerie red glow. Multiple system failure alerts flash on darkened screens.',
-      exits: { north: 'bridge', south: 'main_corridor' },
-      items: ['emergency_codes'],
-      locked: false
-    },
-    bridge: {
-      name: 'Bridge 🚀',
-      description: 'The captain\'s bridge is in chaos. Navigation systems are offline, viewscreen shows static.',
-      exits: { south: 'command_center', east: 'navigation', west: 'communications' },
-      items: ['bridge_key', 'captain_logs'],
-      locked: false
-    },
-    navigation: {
-      name: 'Navigation 🧭',
-      description: 'Star charts flicker weakly. Quantum compass spinning wildly without AI guidance.',
-      exits: { west: 'bridge' },
-      items: ['nav_codes', 'stellar_maps'],
-      locked: true,
-      unlockRequires: ['bridge_key']
-    },
+    // Row 0 (Top row)
     communications: {
       name: 'Communications 📡',
       description: 'All external communications down. Distress beacon offline.',
@@ -552,96 +536,185 @@ function App() {
       locked: true,
       unlockRequires: ['nav_codes']
     },
-    main_corridor: {
-      name: 'Main Corridor ⚡',
-      description: 'The main artery of the ship. Flickering emergency lights barely illuminate the way.',
-      exits: { north: 'command_center', west: 'engineering', east: 'security', south: 'life_support' },
-      items: ['repair_kit'],
+    
+    bridge: {
+      name: 'Bridge 🚀',
+      description: 'The captain\'s bridge is in chaos. Navigation systems are offline.',
+      exits: { 
+        west: 'communications', 
+        east: 'navigation', 
+        south: 'command_center' 
+      },
+      items: ['bridge_key', 'captain_logs'],
       locked: false
     },
+    
+    navigation: {
+      name: 'Navigation 🧭',
+      description: 'Star charts flicker weakly. Quantum compass spinning wildly.',
+      exits: { 
+        west: 'bridge', 
+        south: 'laboratory' 
+      },
+      items: ['nav_codes', 'stellar_maps'],
+      locked: true,
+      unlockRequires: ['bridge_key']
+    },
+
+    // Row 1
     engineering: {
       name: 'Engineering Bay ⚙️',
-      description: 'Massive machinery stands silent. Fusion reactor controls locked behind safety protocols.',
-      exits: { east: 'main_corridor', south: 'power_core' },
+      description: 'Massive machinery stands silent. Fusion reactor controls locked.',
+      exits: { 
+        east: 'main_corridor', 
+        south: 'power_core' 
+      },
       items: ['power_cell', 'engineering_tools'],
       locked: true,
       unlockRequires: ['emergency_codes']
     },
-    power_core: {
-      name: 'Power Core ⚛️',
-      description: 'The ship\'s central power reactor. Radiation warnings flash, core in shutdown mode.',
-      exits: { north: 'engineering' },
-      items: ['fusion_key', 'radiation_suit'],
-      locked: true,
-      unlockRequires: ['power_cell']
+    
+    command_center: {
+      name: 'Command Center 🖥️',
+      description: 'Emergency lighting casts an eerie red glow. Multiple system failures.',
+      exits: { 
+        north: 'bridge', 
+        south: 'main_corridor' 
+      },
+      items: ['emergency_codes'],
+      locked: false
     },
-    security: {
-      name: 'Security Office 🔒',
-      description: 'High-security monitoring station. Multiple screens show various ship areas.',
-      exits: { west: 'main_corridor', south: 'armory' },
-      items: ['security_codes', 'surveillance_data'],
-      locked: true,
-      unlockRequires: ['emergency_codes']
-    },
-    armory: {
-      name: 'Armory ⚔️',
-      description: 'Weapon storage with plasma rifle mounts. Most weapons locked behind barriers.',
-      exits: { north: 'security' },
-      items: ['plasma_rifle', 'armor_vest', 'ammo_clip'],
-      locked: true,
-      unlockRequires: ['security_codes']
-    },
-    life_support: {
-      name: 'Life Support 🌬️',
-      description: 'Atmospheric processors struggle to maintain breathable air. Oxygen dropping steadily.',
-      exits: { north: 'main_corridor', west: 'medical_bay', east: 'laboratory' },
-      items: ['env_codes', 'air_filter'],
-      locked: true,
-      unlockRequires: ['engineering_tools']
-    },
-    medical_bay: {
-      name: 'Medical Bay 🏥',
-      description: 'Advanced medical facility with bio-regeneration pods and surgical arrays.',
-      exits: { east: 'life_support' },
-      items: ['medkit', 'bio_scanner', 'stim_pack'],
-      locked: true,
-      unlockRequires: ['env_codes']
-    },
+    
     laboratory: {
       name: 'Laboratory 🧪',
-      description: 'Research equipment hums with backup power. Where you can synthesize the AI repair matrix.',
-      exits: { west: 'life_support', south: 'fabrication' },
+      description: 'Research equipment hums with backup power. AI repair matrix synthesis.',
+      exits: { 
+        north: 'navigation', 
+        south: 'fabrication' 
+      },
       items: ['research_pass', 'ai_matrix_components'],
       locked: true,
       unlockRequires: ['fusion_key']
     },
+
+    // Row 2 (Middle corridor)
+    power_core: {
+      name: 'Power Core ⚛️',
+      description: 'The ship\'s central power reactor. Radiation warnings flash.',
+      exits: { 
+        north: 'engineering' 
+      },
+      items: ['fusion_key', 'radiation_suit'],
+      locked: true,
+      unlockRequires: ['power_cell']
+    },
+    
+    main_corridor: {
+      name: 'Main Corridor ⚡',
+      description: 'The main artery of the ship. Flickering emergency lights.',
+      exits: { 
+        north: 'command_center', 
+        west: 'engineering', 
+        east: 'security', 
+        south: 'life_support' 
+      },
+      items: ['repair_kit'],
+      locked: false
+    },
+    
     fabrication: {
       name: 'Fabrication Lab 🔧',
-      description: 'Automated manufacturing facility with 3D molecular printers and raw material processors.',
-      exits: { north: 'laboratory', west: 'cargo_bay' },
+      description: 'Automated manufacturing facility with 3D molecular printers.',
+      exits: { 
+        north: 'laboratory', 
+        south: 'cargo_bay' 
+      },
       items: ['fabricator', 'raw_materials', 'blueprint_scanner'],
       locked: true,
       unlockRequires: ['research_pass']
     },
+
+    security: {
+      name: 'Security Office 🔒',
+      description: 'High-security monitoring station. Multiple screens show ship areas.',
+      exits: { 
+        west: 'main_corridor', 
+        south: 'armory' 
+      },
+      items: ['security_codes', 'surveillance_data'],
+      locked: true,
+      unlockRequires: ['emergency_codes']
+    },
+
+    // Row 3
+    armory: {
+      name: 'Armory ⚔️',
+      description: 'Weapon storage with plasma rifle mounts. Most weapons locked.',
+      exits: { 
+        north: 'security', 
+        east: 'life_support' 
+      },
+      items: ['plasma_rifle', 'armor_vest', 'ammo_clip'],
+      locked: true,
+      unlockRequires: ['security_codes']
+    },
+    
+    life_support: {
+      name: 'Life Support 🌬️',
+      description: 'Atmospheric processors struggle to maintain breathable air.',
+      exits: { 
+        north: 'main_corridor', 
+        west: 'armory', 
+        south: 'medical_bay' 
+      },
+      items: ['env_codes', 'air_filter'],
+      locked: true,
+      unlockRequires: ['engineering_tools']
+    },
+    
     cargo_bay: {
       name: 'Cargo Bay 📦',
-      description: 'Massive storage area with floating containers. Emergency supplies scattered after evacuation.',
-      exits: { east: 'fabrication', south: 'detention' },
+      description: 'Massive storage area with floating containers. Emergency supplies scattered.',
+      exits: { 
+        north: 'fabrication', 
+        south: 'ai_core' 
+      },
       items: ['supply_crate', 'gravity_boots', 'emergency_beacon'],
       locked: false
     },
+
+    // Row 4 (Bottom row)
     detention: {
       name: 'Detention Block 🚔',
-      description: 'Ship\'s security detention area. Emergency lockdown protocols have sealed most cells.',
-      exits: { north: 'cargo_bay', east: 'ai_core' },
+      description: 'Ship\'s security detention area. Emergency lockdown protocols.',
+      exits: { 
+        east: 'medical_bay' 
+      },
       items: ['security_key', 'prisoner_log'],
       locked: true,
       unlockRequires: ['security_codes']
     },
+    
+    medical_bay: {
+      name: 'Medical Bay 🏥',
+      description: 'Advanced medical facility with bio-regeneration pods.',
+      exits: { 
+        north: 'life_support', 
+        west: 'detention', 
+        east: 'ai_core' 
+      },
+      items: ['medkit', 'bio_scanner', 'stim_pack'],
+      locked: true,
+      unlockRequires: ['env_codes']
+    },
+    
     ai_core: {
       name: 'AI Core 🤖',
-      description: 'Central AI housing. Massive quantum processors stand silent. Restore the ship\'s intelligence here.',
-      exits: { west: 'detention' },
+      description: 'Central AI housing. Massive quantum processors stand silent.',
+      exits: { 
+        north: 'cargo_bay', 
+        west: 'medical_bay' 
+      },
       items: ['ai_activation_key'],
       locked: true,
       unlockRequires: ['env_codes', 'research_pass'],
@@ -649,7 +722,7 @@ function App() {
     }
   };
 
-  // Items data
+  // Items data (keeping existing items)
   const items = {
     flashlight: { name: 'Emergency Flashlight 🔦', description: 'Provides light in dark areas', value: 25 },
     emergency_scanner: { name: 'Emergency Scanner 📱', description: 'Detects system failures and hazards', value: 50 },
