@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 function MobileControls({ onCommand, gameState, currentRoom }) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -17,9 +17,8 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
     { label: '➡️', command: 'go east', direction: 'east' },
   ];
 
-  const contextCommands = React.useMemo(() => {
+  const contextCommands = useMemo(() => {
     const commands = [];
-    
     // Add item commands based on current room
     if (currentRoom?.items) {
       currentRoom.items.forEach(item => {
@@ -27,25 +26,23 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
           commands.push({
             label: `📦 Take ${item}`,
             command: `take ${item}`,
-            color: '#00ff88'
+            color: '#00ff88',
           });
         }
       });
     }
-
-    // Add use commands based on inventory
+    // Add use commands based on player's inventory (limit to 3 for convenience)
     if (gameState.inventory) {
       gameState.inventory.slice(0, 3).forEach(item => {
         commands.push({
           label: `⚡ Use ${item}`,
           command: `use ${item}`,
-          color: '#ffaa33'
+          color: '#ffaa33',
         });
       });
     }
-
     return commands;
-  }, [currentRoom, gameState]);
+  }, [currentRoom, gameState.inventory]);
 
   return (
     <div className="mobile-controls" style={{
@@ -55,16 +52,20 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
       right: 0,
       backgroundColor: '#000000dd',
       backdropFilter: 'blur(10px)',
-      padding: '15px',
-      zIndex: 1000,
-      borderTop: '2px solid #00ffff'
+      padding: '10px 15px 20px', // Added extra bottom padding for safe spacing
+      zIndex: 11000, // Slightly higher z-index for visibility
+      borderTop: '2px solid #00ffff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
     }}>
       {/* Quick Action Bar */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '8px',
-        marginBottom: '10px'
+        width: '100%',
+        marginBottom: '10px',
       }}>
         {quickCommands.map((cmd, index) => (
           <button
@@ -78,8 +79,11 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
               color: cmd.color,
               fontSize: '18px',
               cursor: 'pointer',
-              textAlign: 'center'
+              textAlign: 'center',
+              userSelect: 'none',
             }}
+            aria-label={cmd.command}
+            title={cmd.command}
           >
             {cmd.label}
           </button>
@@ -91,36 +95,28 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
         display: 'grid',
         gridTemplateColumns: '1fr 2fr 1fr',
         gridTemplateRows: '1fr 1fr 1fr',
-        gap: '4px',
-        maxWidth: '200px',
-        margin: '0 auto 10px auto'
+        gap: '6px',
+        maxWidth: '220px',
+        width: '100%',
+        margin: '0 auto 10px auto',
+        userSelect: 'none',
       }}>
-        <div></div>
+        <div />
         <button
           onClick={() => onCommand('go north')}
-          style={{
-            padding: '10px',
-            backgroundColor: '#003366',
-            border: '2px solid #0066ff',
-            borderRadius: '6px',
-            color: '#0066ff',
-            fontSize: '16px'
-          }}
+          style={movementButtonStyle}
+          aria-label="Go north"
+          title="Go north"
         >
           ⬆️
         </button>
-        <div></div>
-        
+        <div />
+
         <button
           onClick={() => onCommand('go west')}
-          style={{
-            padding: '10px',
-            backgroundColor: '#003366',
-            border: '2px solid #0066ff',
-            borderRadius: '6px',
-            color: '#0066ff',
-            fontSize: '16px'
-          }}
+          style={movementButtonStyle}
+          aria-label="Go west"
+          title="Go west"
         >
           ⬅️
         </button>
@@ -133,40 +129,34 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
             borderRadius: '6px',
             color: showCommandPalette ? '#6600ff' : '#ff0066',
             fontSize: '14px',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            userSelect: 'none',
           }}
+          aria-label="Toggle command palette"
+          title="Toggle command palette"
         >
           CMD
         </button>
         <button
           onClick={() => onCommand('go east')}
-          style={{
-            padding: '10px',
-            backgroundColor: '#003366',
-            border: '2px solid #0066ff',
-            borderRadius: '6px',
-            color: '#0066ff',
-            fontSize: '16px'
-          }}
+          style={movementButtonStyle}
+          aria-label="Go east"
+          title="Go east"
         >
           ➡️
         </button>
-        
-        <div></div>
+
+        <div />
         <button
           onClick={() => onCommand('go south')}
-          style={{
-            padding: '10px',
-            backgroundColor: '#003366',
-            border: '2px solid #0066ff',
-            borderRadius: '6px',
-            color: '#0066ff',
-            fontSize: '16px'
-          }}
+          style={movementButtonStyle}
+          aria-label="Go south"
+          title="Go south"
         >
           ⬇️
         </button>
-        <div></div>
+        <div />
       </div>
 
       {/* Expandable Command Palette */}
@@ -178,22 +168,25 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
           padding: '10px',
           marginBottom: '10px',
           maxHeight: '150px',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          width: '100%',
+          maxWidth: '380px',
         }}>
-          <div style={{ 
+          <div style={{
             color: '#00ffff',
             fontSize: '12px',
             fontWeight: 'bold',
             marginBottom: '8px',
-            textAlign: 'center'
+            textAlign: 'center',
+            userSelect: 'none',
           }}>
             Context Commands
           </div>
-          
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '6px'
+            gap: '6px',
           }}>
             {contextCommands.map((cmd, index) => (
               <button
@@ -209,8 +202,11 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
                   borderRadius: '4px',
                   color: cmd.color,
                   fontSize: '11px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  userSelect: 'none',
                 }}
+                aria-label={cmd.command}
+                title={cmd.label}
               >
                 {cmd.label}
               </button>
@@ -225,7 +221,8 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '4px',
         fontSize: '10px',
-        textAlign: 'center'
+        textAlign: 'center',
+        userSelect: 'none',
       }}>
         <div style={{ color: '#00ff88' }}>
           LVL {gameState.level}
@@ -243,5 +240,16 @@ function MobileControls({ onCommand, gameState, currentRoom }) {
     </div>
   );
 }
+
+const movementButtonStyle = {
+  padding: '10px',
+  backgroundColor: '#003366',
+  border: '2px solid #0066ff',
+  borderRadius: '6px',
+  color: '#0066ff',
+  fontSize: '16px',
+  cursor: 'pointer',
+  userSelect: 'none',
+};
 
 export default MobileControls;
